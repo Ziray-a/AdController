@@ -33,14 +33,14 @@
     },
     "platformConfig": {
         "macos": {
-            "bundleId": "com.example.obs-plugintemplate"
+            "bundleId": "de.sodgeit.obs-adslicecontroller"
         }
     },
-    "name": "obs-plugintemplate",
+    "name": "obs-adslicecontroller",
     "version": "1.0.0",
-    "author": "Your Name Here",
-    "website": "https://example.com",
-    "email": "me@example.com",
+    "author": "sodgeIT",
+    "website": "https://www.sodgeit.de/",
+    "email": "kontakt@sodgeit.de",
     "uuids": {
         "windowsApp": "00000000-0000-0000-0000-000000000000"
     }
