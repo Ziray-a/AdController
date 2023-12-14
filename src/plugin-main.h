@@ -14,15 +14,19 @@ class AdControlWidget : public QWidget {
 
 public:
 	AdControlWidget();
+	void setURL(std::string url);
+	std::string getURL();
 
 private:
-	void getAds();
-	void getAds(std::string APIHost);
+	void updateAds();
+	std::string URL;
+	void getAds(std::string URL);
 	std::vector<AdInfo> availableAds;
 	void reloadAds();
 	void playAd();
 	int chosenAd;
 	void setAd();
+	QPushButton *refresh = new QPushButton(tr("&Refresh"));
 	QLineEdit *APIlink = new QLineEdit();
 	QVBoxLayout *vbox = new QVBoxLayout();
 	QComboBox *adSelection = new QComboBox();
