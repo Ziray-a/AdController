@@ -34,6 +34,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QNetworkReply>
 #include <nlohmann/json.hpp>
 #include <QLayout>
+#include <QFile>
+#include <thread>
+#include <chrono>
 
 using json = nlohmann::json;
 config_t *config;
@@ -65,6 +68,11 @@ bool obs_module_load(void)
 		confurl = "";
 	obs_log(LOG_INFO, confurl); */
 
+	/* 	obs_properties *props = obs_properties_create();
+	obs_properties_add_text(
+		props, "API-Route",
+		"Enter the API route you wish to access with AdSlice controller",
+		OBS_TEXT_DEFAULT); */
 	char pluginID[] = "obs-ad_slice_controller_100";
 	AdControlWidget *dockWidget = new AdControlWidget();
 	dockWidget->setMinimumHeight(200);
@@ -104,23 +112,32 @@ AdControlWidget::AdControlWidget()
 
 void AdControlWidget::playAd()
 {
-
+	using namespace std::chrono_literals;
 	adPlayButton->setEnabled(false);
+	QNetworkAccessManager manager;
+	std::string url = "http://localhost:5499/loadAd";
+	std::string videoJSONstring =
+		"{\"input\": \"" + url +
+		"\",\"input_format\": \"mp4\", \"is_local_file\" : false, \"is_hw_decoding\" : true }";
 	obs_source *prevscene = obs_frontend_get_current_scene();
 	obs_scene *adScene = obs_scene_create("Ad Scene");
 	obs_source *scenesource = obs_scene_get_source(adScene);
-	obs_source *adsource =
-		obs_source_create_private("ffmpeg_source", "adSource", NULL);
-
+	obs_data *mediasettings =
+		obs_data_create_from_json(videoJSONstring.c_str());
+	obs_source *adsource = obs_source_create("ffmpeg_source", "adSource",
+						 mediasettings, nullptr);
+	obs_scene_add(adScene, adsource);
 	obs_frontend_set_current_scene(scenesource);
 
 	//play ad
+	std::this_thread::sleep_for(10s);
 	//wait for ad to finish
 	obs_frontend_set_current_scene(prevscene);
 	obs_source_release(adsource);
 	obs_source_remove(adsource);
 	obs_scene_release(adScene);
 	obs_source_remove(scenesource);
+	obs_data_release(mediasettings);
 	adPlayButton->setEnabled(true);
 }
 
@@ -172,7 +189,6 @@ std::string AdControlWidget::getURL()
 
 void AdControlWidget::reloadAds()
 {
-	//get menu from API
 
 	getAds(URL);
 	updateAds();
