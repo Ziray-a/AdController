@@ -125,6 +125,8 @@ void SettingsWindow::okayclose()
 	config_set_string(pluginConfig, "API", "API-Host",
 			  hostLine->text().toStdString().c_str());
 	config_save_safe(pluginConfig, ".ex.tmp", ".ex.back");
+	dockWidget->setURL(hostLine->text().toStdString());
+	dockWidget->reloadAds();
 	this->close();
 }
 

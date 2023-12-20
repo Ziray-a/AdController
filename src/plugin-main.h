@@ -44,13 +44,13 @@ public:
 	AdControlWidget(std::string url);
 	void setURL(std::string url);
 	std::string getURL();
+	void reloadAds();
 
 private:
 	void updateAds();
 	std::string URL;
 	void getAds(std::string URL);
 	std::vector<AdInfo> availableAds;
-	void reloadAds();
 	void playAd();
 	int chosenAd;
 	void setAd();
