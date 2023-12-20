@@ -40,6 +40,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 using json = nlohmann::json;
 config_t *pluginConfig;
+AdControlWidget *dockWidget;
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
@@ -68,17 +69,11 @@ bool obs_module_load(void)
 		confurl = "";
 	obs_log(LOG_INFO, confurl);
 
-	/* 	obs_properties *props = obs_properties_create();
-	auto paramAPI = obs_properties_add_text(
-		props, "API-Route",
-		"Enter the API route you wish to access with AdSlice controller",
-		OBS_TEXT_DEFAULT);
-	std::cout << paramAPI << std::endl; */
 	char pluginID[] = "obs-ad_slice_controller_100";
-	AdControlWidget *dockWidget = new AdControlWidget();
+	dockWidget = new AdControlWidget(
+		config_get_string(pluginConfig, "API", "API-Host"));
 	dockWidget->setMinimumHeight(200);
 	dockWidget->setMinimumWidth(150);
-	dockWidget->setURL("http://localhost:5499");
 
 	if (!obs_frontend_add_dock_by_id(pluginID, "Ad Control", dockWidget))
 		throw "Could not add dock for plugin";
@@ -100,11 +95,38 @@ void obs_module_unload(void)
 
 void SettingsButton::ButtonClicked()
 {
-	SettingsWindow *settings = new SettingsWindow();
+	SettingsWindow *settings = new SettingsWindow(pluginConfig);
 	settings->show();
 }
 
-SettingsWindow::SettingsWindow() {}
+SettingsWindow::SettingsWindow(config_t *config)
+{
+	this->setMaximumHeight(150);
+	hostLine->setText(config_get_string(config, "API", "API-Host"));
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setRowStretch(0, 0);
+	layout->setColumnStretch(0, 0);
+	layout->addWidget(apiHostLabel, 0, 0);
+	layout->addWidget(hostLine, 0, 1);
+	childLayout->addWidget(cancel, 0, 0);
+	childLayout->addWidget(ok, 0, 1);
+	layout->addLayout(childLayout, 1, 1);
+	connect(cancel, &QPushButton::released, this,
+		&SettingsWindow::cancelclose);
+	connect(ok, &QPushButton::released, this, &SettingsWindow::okayclose);
+	this->setLayout(layout);
+}
+void SettingsWindow::cancelclose()
+{
+	this->close();
+}
+void SettingsWindow::okayclose()
+{
+	config_set_string(pluginConfig, "API", "API-Host",
+			  hostLine->text().toStdString().c_str());
+	config_save_safe(pluginConfig, ".ex.tmp", ".ex.back");
+	this->close();
+}
 
 SettingsButton::SettingsButton()
 {
@@ -113,9 +135,10 @@ SettingsButton::SettingsButton()
 		&SettingsButton::ButtonClicked);
 }
 
-AdControlWidget::AdControlWidget()
+AdControlWidget::AdControlWidget(std::string url)
 {
 
+	setURL(url);
 	upperGrid->setContentsMargins(0, 0, 0, 0);
 	upperGrid->setRowStretch(0, 0);
 	upperGrid->setColumnStretch(0, 0);
@@ -142,7 +165,8 @@ void AdControlWidget::playAd()
 	using namespace std::chrono_literals;
 	adPlayButton->setEnabled(false);
 	QNetworkAccessManager manager;
-	std::string url = "http://localhost:5499/loadAd";
+	std::string url;
+	url.append(getURL().c_str()).append("/loadAd");
 	std::string videoJSONstring =
 		"{\"input\": \"" + url +
 		"\",\"input_format\": \"mp4\", \"is_local_file\" : false, \"scale\": { \"x\": 1.5, \"y\": 1.5} }";
@@ -172,9 +196,10 @@ void AdControlWidget::getAds(std::string APIHost)
 {
 	obs_log(LOG_INFO, "getting Ads...");
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-	obs_log(LOG_INFO, APIHost.c_str());
+	std::string requestString;
+	requestString.append(APIHost.c_str()).append("/getAds");
 	QNetworkRequest *request = new QNetworkRequest(
-		QUrl().fromPercentEncoding("http://localhost:5499/getAds"));
+		QUrl().fromPercentEncoding(requestString.c_str()));
 	request->setRawHeader("User-Agent", "MyOwnBrowser 1.0");
 	connect(manager, &QNetworkAccessManager::finished, this,
 		[=](QNetworkReply *reply) {
