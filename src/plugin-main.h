@@ -5,14 +5,13 @@
 #include <plugin-main.h>
 #include <obs-frontend-api.h>
 #include <QWidget>
-#include <QVBoxLayout>
+#include <QLayout>
 #include <QPushButton>
 #include <string>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QDialog>
 #include <QLabel>
-
 typedef std::tuple<int, std::string> AdInfo;
 
 class SettingsWindow : public QDialog {

@@ -27,13 +27,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <thread>
 #include <chrono>
 #include <random>
-#include <format>
 #include <QLabel>
 #include <iostream>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <nlohmann/json.hpp>
-#include <QLayout>
 #include <QFile>
 #include <thread>
 #include <chrono>
