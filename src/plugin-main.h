@@ -20,6 +20,8 @@ public:
 	SettingsWindow(config_t *config);
 	QLabel *apiHostLabel = new QLabel(tr(" API-Host: "));
 	QLineEdit *hostLine = new QLineEdit();
+	QLabel *apiTokenLabel = new QLabel(tr(" API-Token: "));
+	QLineEdit *tokenLine = new QLineEdit();
 	config_t *settingConfig;
 	QGridLayout *layout = new QGridLayout(this);
 	QGridLayout *childLayout = new QGridLayout();
@@ -42,12 +44,15 @@ class AdControlWidget : public QWidget {
 public:
 	AdControlWidget(std::string url);
 	void setURL(std::string url);
+	void setToken(std::string ptoken);
+	std::string getToken();
 	std::string getURL();
 	void reloadAds();
 
 private:
 	void updateAds();
 	std::string URL;
+	std::string token;
 	void getAds(std::string URL);
 	std::vector<AdInfo> availableAds;
 	void playAd();

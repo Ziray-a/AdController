@@ -44,28 +44,26 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 bool obs_module_load(void)
 {
-	if (config_open(&pluginConfig, "./obs-ad-slice-controler.ini",
-			CONFIG_OPEN_EXISTING) == CONFIG_FILENOTFOUND) {
+	int conftest = config_open(&pluginConfig,
+				   "./obs-ad-slice-controler.ini",
+				   CONFIG_OPEN_EXISTING);
+	if (conftest == CONFIG_FILENOTFOUND) {
 
 		pluginConfig = config_create("./obs-ad-slice-controler.ini");
 
 		config_set_default_string(pluginConfig, "API", "API-Host",
 					  "http://localhost:5499");
+		config_set_default_string(pluginConfig, "API", "Token",
+					  "Token Here");
 		config_save_safe(pluginConfig, ".ex.tmp", ".ex.back");
 		obs_log(LOG_INFO, "Created new Adslice Config");
-	} else if (config_open(&pluginConfig, "./obs-ad-slice-controler.ini",
-			       CONFIG_OPEN_EXISTING) == CONFIG_ERROR) {
+
+	} else if (conftest == CONFIG_ERROR) {
 		obs_log(LOG_INFO, "Error in config file - reseting...");
 		pluginConfig = config_create("./obs-ad-slice-controler.ini");
 	}
+
 	obs_log(LOG_INFO, "config found reading config");
-	config_open(&pluginConfig, "./obs-ad-slice-controler.ini",
-		    CONFIG_OPEN_EXISTING);
-	const char *confurl =
-		config_get_string(pluginConfig, "API", "API-Host");
-	if (!confurl)
-		confurl = "";
-	obs_log(LOG_INFO, confurl);
 
 	char pluginID[] = "obs-ad_slice_controller_100";
 	dockWidget = new AdControlWidget(
@@ -87,7 +85,7 @@ void AdControlWidget::setURL(std::string url)
 }
 void obs_module_unload(void)
 {
-
+	config_close(pluginConfig);
 	obs_log(LOG_INFO, "plugin unloaded");
 }
 
@@ -100,15 +98,19 @@ void SettingsButton::ButtonClicked()
 SettingsWindow::SettingsWindow(config_t *config)
 {
 	this->setMaximumHeight(150);
+	this->setWindowTitle("Ad Control Settings");
 	hostLine->setText(config_get_string(config, "API", "API-Host"));
+	tokenLine->setText(config_get_string(config, "API", "Token"));
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setRowStretch(0, 0);
 	layout->setColumnStretch(0, 0);
 	layout->addWidget(apiHostLabel, 0, 0);
 	layout->addWidget(hostLine, 0, 1);
+	layout->addWidget(apiTokenLabel, 1, 0);
+	layout->addWidget(tokenLine, 1, 1);
 	childLayout->addWidget(cancel, 0, 0);
 	childLayout->addWidget(ok, 0, 1);
-	layout->addLayout(childLayout, 1, 1);
+	layout->addLayout(childLayout, 2, 1);
 	connect(cancel, &QPushButton::released, this,
 		&SettingsWindow::cancelclose);
 	connect(ok, &QPushButton::released, this, &SettingsWindow::okayclose);
@@ -122,8 +124,11 @@ void SettingsWindow::okayclose()
 {
 	config_set_string(pluginConfig, "API", "API-Host",
 			  hostLine->text().toStdString().c_str());
+	config_set_string(pluginConfig, "API", "Token",
+			  tokenLine->text().toStdString().c_str());
 	config_save_safe(pluginConfig, ".ex.tmp", ".ex.back");
 	dockWidget->setURL(hostLine->text().toStdString());
+	dockWidget->setToken(tokenLine->text().toStdString());
 	dockWidget->reloadAds();
 	this->close();
 }
@@ -176,19 +181,20 @@ void AdControlWidget::playAd()
 	obs_data *mediasettings =
 		obs_data_create_from_json(videoJSONstring.c_str());
 	obs_source *adsource = obs_source_create("ffmpeg_source", "adSource",
-						 mediasettings, nullptr);
+						 mediasettings, NULL);
 	obs_scene_add(adScene, adsource);
 	obs_frontend_set_current_scene(scenesource);
-
 	//play ad
 	std::this_thread::sleep_for(3s);
 	//wait for ad to finish
 	obs_frontend_set_current_scene(prevscene);
+	obs_source_release(prevscene);
 	obs_source_release(adsource);
 	obs_source_remove(adsource);
+	obs_scene_prune_sources(adScene);
 	obs_scene_release(adScene);
-	obs_source_remove(scenesource);
 	obs_data_release(mediasettings);
+	obs_source_remove(scenesource);
 	adPlayButton->setEnabled(true);
 }
 
@@ -236,6 +242,16 @@ void AdControlWidget::getAds(std::string APIHost)
 std::string AdControlWidget::getURL()
 {
 	return URL;
+}
+
+std::string AdControlWidget::getToken()
+{
+	return token;
+}
+
+void AdControlWidget::setToken(std::string ptoken)
+{
+	this->token = ptoken;
 }
 
 void AdControlWidget::reloadAds()
