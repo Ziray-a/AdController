@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QDialog>
 #include <QLabel>
+
 typedef std::tuple<int, std::string> AdInfo;
 
 class SettingsWindow : public QDialog {
@@ -42,14 +43,17 @@ class AdControlWidget : public QWidget {
 	Q_OBJECT
 
 public:
-	AdControlWidget(std::string url);
+	AdControlWidget(std::string url, std::string ptoken);
 	void setURL(std::string url);
-	void setToken(std::string ptoken);
+	void setToken(const std::string &ptoken);
 	std::string getToken();
 	std::string getURL();
+	std::string videoLink;
 	void reloadAds();
+	void loadVideo();
 
 private:
+	void getAdLink(std::string APIHost, int adID);
 	void updateAds();
 	std::string URL;
 	std::string token;

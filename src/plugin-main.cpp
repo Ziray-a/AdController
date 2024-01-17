@@ -42,6 +42,8 @@ AdControlWidget *dockWidget;
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
+std::vector<obs_source *> mutedItems;
+
 bool obs_module_load(void)
 {
 	int conftest = config_open(&pluginConfig,
@@ -67,7 +69,8 @@ bool obs_module_load(void)
 
 	char pluginID[] = "obs-ad_slice_controller_100";
 	dockWidget = new AdControlWidget(
-		config_get_string(pluginConfig, "API", "API-Host"));
+		config_get_string(pluginConfig, "API", "API-Host"),
+		config_get_string(pluginConfig, "API", "Token"));
 	dockWidget->setMinimumHeight(200);
 	dockWidget->setMinimumWidth(150);
 
@@ -76,6 +79,13 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)",
 		PLUGIN_VERSION);
 
+	return true;
+}
+
+static bool item_to_source(obs_scene_t *, obs_sceneitem_t *item, void *)
+{
+
+	mutedItems.push_back(obs_sceneitem_get_source(item));
 	return true;
 }
 
@@ -140,10 +150,11 @@ SettingsButton::SettingsButton()
 		&SettingsButton::ButtonClicked);
 }
 
-AdControlWidget::AdControlWidget(std::string url)
+AdControlWidget::AdControlWidget(std::string url, std::string ptoken)
 {
 
 	setURL(url);
+	setToken(ptoken);
 	upperGrid->setContentsMargins(0, 0, 0, 0);
 	upperGrid->setRowStretch(0, 0);
 	upperGrid->setColumnStretch(0, 0);
@@ -167,13 +178,19 @@ AdControlWidget::AdControlWidget(std::string url)
 
 void AdControlWidget::playAd()
 {
-	using namespace std::chrono_literals;
+
 	adPlayButton->setEnabled(false);
 	QNetworkAccessManager manager;
 	std::string url;
-	url.append(getURL().c_str()).append("/loadAd");
+	getAdLink(getURL(),
+		  std::get<0>(availableAds[adSelection->currentIndex()]));
+}
+
+void AdControlWidget::loadVideo()
+{
+	using namespace std::chrono_literals;
 	std::string videoJSONstring =
-		"{\"input\": \"" + url +
+		"{\"input\": \"" + videoLink +
 		"\",\"input_format\": \"mp4\", \"is_local_file\" : false, \"scale\": { \"x\": 1.5, \"y\": 1.5} }";
 	obs_source *prevscene = obs_frontend_get_current_scene();
 	obs_scene *adScene = obs_scene_create("Ad Scene");
@@ -183,6 +200,13 @@ void AdControlWidget::playAd()
 	obs_source *adsource = obs_source_create("ffmpeg_source", "adSource",
 						 mediasettings, NULL);
 	obs_scene_add(adScene, adsource);
+	obs_scene_enum_items(adScene, item_to_source, &mutedItems);
+
+	for (auto &it : mutedItems) {
+		std::cout << obs_source_get_name(it) << std::endl;
+		if (it == adsource)
+			obs_source_set_muted(it, true);
+	}
 	obs_frontend_set_current_scene(scenesource);
 	//play ad
 	std::this_thread::sleep_for(3s);
@@ -198,6 +222,45 @@ void AdControlWidget::playAd()
 	adPlayButton->setEnabled(true);
 }
 
+void AdControlWidget::getAdLink(std::string APIHost, int adID)
+{
+	obs_log(LOG_INFO, "getting ad link ...");
+	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+	std::string requestString;
+	requestString.append(APIHost.c_str())
+		.append("/prepareAd?adID=")
+		.append(std::to_string(adID));
+	std::cout << requestString << std::endl;
+	QNetworkRequest *request = new QNetworkRequest(
+		QUrl().fromPercentEncoding(requestString.c_str()));
+	request->setRawHeader("User-Agent", "OBS QT 1.0");
+	request->setRawHeader("Authorization", getToken().c_str());
+	obs_log(LOG_INFO, "getting ad link ...");
+	connect(manager, &QNetworkAccessManager::finished, this,
+		[=](QNetworkReply *reply) {
+			obs_log(LOG_INFO, "requesting ...");
+			if (reply->error() == QNetworkReply::NoError) {
+				QByteArray response = reply->readAll();
+				std::string stringseps = response.toStdString();
+				std::string returnstring;
+				std::cout << "hi " << returnstring << std::endl;
+
+				returnstring.append(APIHost.c_str())
+					.append("/loadAd?adID=")
+					.append(std::to_string(adID))
+					.append("&dlID=")
+					.append(stringseps.c_str());
+				videoLink = returnstring;
+
+			} else {
+				std::cout << reply->readAll().toStdString()
+					  << std::endl;
+			}
+			loadVideo();
+		});
+	manager->get(*request);
+}
+
 void AdControlWidget::getAds(std::string APIHost)
 {
 	obs_log(LOG_INFO, "getting Ads...");
@@ -206,7 +269,8 @@ void AdControlWidget::getAds(std::string APIHost)
 	requestString.append(APIHost.c_str()).append("/getAds");
 	QNetworkRequest *request = new QNetworkRequest(
 		QUrl().fromPercentEncoding(requestString.c_str()));
-	request->setRawHeader("User-Agent", "MyOwnBrowser 1.0");
+	request->setRawHeader("User-Agent", "OBS QT 1.0");
+	request->setRawHeader("Authorization", getToken().c_str());
 	connect(manager, &QNetworkAccessManager::finished, this,
 		[=](QNetworkReply *reply) {
 			obs_log(LOG_INFO, "requesting ...");
@@ -246,17 +310,16 @@ std::string AdControlWidget::getURL()
 
 std::string AdControlWidget::getToken()
 {
-	return token;
+	return this->token;
 }
 
-void AdControlWidget::setToken(std::string ptoken)
+void AdControlWidget::setToken(const std::string &ptoken)
 {
 	this->token = ptoken;
 }
 
 void AdControlWidget::reloadAds()
 {
-
 	getAds(URL);
 	updateAds();
 }
