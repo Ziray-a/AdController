@@ -203,7 +203,6 @@ void AdControlWidget::loadVideo()
 	obs_scene_enum_items(adScene, item_to_source, &mutedItems);
 
 	for (auto &it : mutedItems) {
-		std::cout << obs_source_get_name(it) << std::endl;
 		if (it == adsource)
 			obs_source_set_muted(it, true);
 	}
@@ -243,7 +242,6 @@ void AdControlWidget::getAdLink(std::string APIHost, int adID)
 				QByteArray response = reply->readAll();
 				std::string stringseps = response.toStdString();
 				std::string returnstring;
-				std::cout << "hi " << returnstring << std::endl;
 
 				returnstring.append(APIHost.c_str())
 					.append("/loadAd?adID=")
