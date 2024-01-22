@@ -21,6 +21,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <plugin-main.h>
 #include <obs-frontend-api.h>
 #include <util/config-file.h>
+#include <callback/signal.h>
 #include <QDockWidget>
 #include <QMenuBar>
 #include <QComboBox>
@@ -186,39 +187,45 @@ void AdControlWidget::playAd()
 		  std::get<0>(availableAds[adSelection->currentIndex()]));
 }
 
+static void finishAd(void *data, calldata_t *calldata)
+{
+	UNUSED_PARAMETER(calldata);
+	AdControlWidget *widget = reinterpret_cast<AdControlWidget *>(data);
+	obs_frontend_set_current_scene(widget->prevscene);
+	obs_source_release(widget->prevscene);
+	obs_source_release(widget->adsource);
+	obs_source_remove(widget->adsource);
+	obs_scene_prune_sources(widget->adScene);
+	obs_scene_release(widget->adScene);
+	obs_data_release(widget->mediasettings);
+	obs_source_remove(widget->scenesource);
+	widget->adPlayButton->setEnabled(true);
+}
+
 void AdControlWidget::loadVideo()
 {
 	using namespace std::chrono_literals;
 	std::string videoJSONstring =
 		"{\"input\": \"" + videoLink +
 		"\",\"input_format\": \"mp4\", \"is_local_file\" : false, \"scale\": { \"x\": 1.5, \"y\": 1.5} }";
-	obs_source *prevscene = obs_frontend_get_current_scene();
-	obs_scene *adScene = obs_scene_create("Ad Scene");
-	obs_source *scenesource = obs_scene_get_source(adScene);
-	obs_data *mediasettings =
-		obs_data_create_from_json(videoJSONstring.c_str());
-	obs_source *adsource = obs_source_create("ffmpeg_source", "adSource",
-						 mediasettings, NULL);
+	prevscene = obs_frontend_get_current_scene();
+	adScene = obs_scene_create("Ad Scene");
+	scenesource = obs_scene_get_source(adScene);
+	mediasettings = obs_data_create_from_json(videoJSONstring.c_str());
+	adsource = obs_source_create("ffmpeg_source", "adSource", mediasettings,
+				     NULL);
 	obs_scene_add(adScene, adsource);
 	obs_scene_enum_items(adScene, item_to_source, &mutedItems);
 
-	for (auto &it : mutedItems) {
+	/* 	for (auto &it : mutedItems) {
 		if (it == adsource)
 			obs_source_set_muted(it, true);
-	}
+	} */
 	obs_frontend_set_current_scene(scenesource);
 	//play ad
-	std::this_thread::sleep_for(3s);
+	signal_handler_t *sh = obs_source_get_signal_handler(adsource);
+	signal_handler_connect(sh, "media_ended", finishAd, this);
 	//wait for ad to finish
-	obs_frontend_set_current_scene(prevscene);
-	obs_source_release(prevscene);
-	obs_source_release(adsource);
-	obs_source_remove(adsource);
-	obs_scene_prune_sources(adScene);
-	obs_scene_release(adScene);
-	obs_data_release(mediasettings);
-	obs_source_remove(scenesource);
-	adPlayButton->setEnabled(true);
 }
 
 void AdControlWidget::getAdLink(std::string APIHost, int adID)

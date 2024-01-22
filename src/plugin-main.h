@@ -51,6 +51,12 @@ public:
 	std::string videoLink;
 	void reloadAds();
 	void loadVideo();
+	obs_source *prevscene;
+	obs_scene *adScene;
+	obs_source *scenesource;
+	obs_data *mediasettings;
+	obs_source *adsource;
+	QPushButton *adPlayButton = new QPushButton(tr("&Play Ad"));
 
 private:
 	void getAdLink(std::string APIHost, int adID);
@@ -69,7 +75,6 @@ private:
 	QGridLayout *bottomGrid = new QGridLayout();
 	QGridLayout *parentGrid = new QGridLayout();
 	QComboBox *adSelection = new QComboBox();
-	QPushButton *adPlayButton = new QPushButton(tr("&Play Ad"));
 	QPushButton *settingsButton = new SettingsButton();
 };
 
