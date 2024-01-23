@@ -44,7 +44,6 @@ OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 std::vector<obs_source *> mutedItems;
-
 bool obs_module_load(void)
 {
 	int conftest = config_open(&pluginConfig,
@@ -80,13 +79,6 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)",
 		PLUGIN_VERSION);
 
-	return true;
-}
-
-static bool item_to_source(obs_scene_t *, obs_sceneitem_t *item, void *)
-{
-
-	mutedItems.push_back(obs_sceneitem_get_source(item));
 	return true;
 }
 
@@ -177,6 +169,22 @@ AdControlWidget::AdControlWidget(std::string url, std::string ptoken)
 	reloadAds();
 }
 
+bool muteSource(void *param, obs_source_t *source)
+{
+	auto whitelistsource = reinterpret_cast<obs_source_t *>(param);
+
+	UNUSED_PARAMETER(param);
+	std::cout << obs_source_get_name(source) << std::endl;
+	if (obs_source_is_scene(source) || source == whitelistsource) {
+		std::cout << obs_source_get_name(source);
+		return true;
+	} else {
+		mutedItems.push_back(source);
+		obs_source_set_muted(source, true);
+		return true;
+	}
+}
+
 void AdControlWidget::playAd()
 {
 
@@ -191,6 +199,11 @@ static void finishAd(void *data, calldata_t *calldata)
 {
 	UNUSED_PARAMETER(calldata);
 	AdControlWidget *widget = reinterpret_cast<AdControlWidget *>(data);
+
+	for (auto it : mutedItems) {
+		obs_source_set_muted(it, false);
+	}
+
 	obs_frontend_set_current_scene(widget->prevscene);
 	obs_source_release(widget->prevscene);
 	obs_source_release(widget->adsource);
@@ -215,13 +228,8 @@ void AdControlWidget::loadVideo()
 	adsource = obs_source_create("ffmpeg_source", "adSource", mediasettings,
 				     NULL);
 	obs_scene_add(adScene, adsource);
-	obs_scene_enum_items(adScene, item_to_source, &mutedItems);
-
-	/* 	for (auto &it : mutedItems) {
-		if (it == adsource)
-			obs_source_set_muted(it, true);
-	} */
 	obs_frontend_set_current_scene(scenesource);
+	obs_enum_sources(muteSource, adsource);
 	//play ad
 	signal_handler_t *sh = obs_source_get_signal_handler(adsource);
 	signal_handler_connect(sh, "media_ended", finishAd, this);
