@@ -46,12 +46,11 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 std::vector<obs_source *> mutedItems;
 bool obs_module_load(void)
 {
-	int conftest = config_open(&pluginConfig,
-				   "./obs-ad-slice-controler.ini",
+	int conftest = config_open(&pluginConfig, "obs-ad-slice-controler.ini",
 				   CONFIG_OPEN_EXISTING);
 	if (conftest == CONFIG_FILENOTFOUND) {
 
-		pluginConfig = config_create("./obs-ad-slice-controler.ini");
+		pluginConfig = config_create("obs-ad-slice-controler.ini");
 
 		config_set_default_string(pluginConfig, "API", "API-Host",
 					  "http://localhost:5499");
@@ -62,7 +61,7 @@ bool obs_module_load(void)
 
 	} else if (conftest == CONFIG_ERROR) {
 		obs_log(LOG_INFO, "Error in config file - reseting...");
-		pluginConfig = config_create("./obs-ad-slice-controler.ini");
+		pluginConfig = config_create("obs-ad-slice-controler.ini");
 	}
 
 	obs_log(LOG_INFO, "config found reading config");
@@ -75,7 +74,7 @@ bool obs_module_load(void)
 	dockWidget->setMinimumWidth(150);
 
 	if (!obs_frontend_add_dock_by_id(pluginID, "Ad Control", dockWidget))
-		throw "Could not add dock for plugin";
+		obs_log(LOG_ERROR, "Could not load dock");
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)",
 		PLUGIN_VERSION);
 
