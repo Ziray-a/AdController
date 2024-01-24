@@ -16,8 +16,15 @@
 !LICENSE
 !README.md
 
+# Include API folder
+!/api/
+
+#exclude node_modules
+*/node_modules
+
 # Exclude lock files
 *.lock.json
+*-lock.json
 
 # Exclude macOS legacy resource forks
 .DS_Store
