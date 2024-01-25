@@ -2,47 +2,84 @@
 
 ## Introduction
 
-The plugin template is meant to be used as a starting point for OBS Studio plugin development. It includes:
+This is the AdSliceController, a plugin to load Ads from an API and play said Ad media in a temprorary scene for a seamless Sponsor experience
 
-* Boilerplate plugin source code
-* A CMake project file
-* GitHub Actions workflows and repository actions
+## How Install
 
-## Set Up
+If you are on **Windows** move `obs-adslicecontroller.pbd` and `obs-adslicecontroller.dll` to `<obs-studio location>\obs-plugins\64bit\`
 
-The plugin project is set up using the included `buildspec.json` file. The following fields should be customized for an actual plugin:
+If you are on **Linux** move `obs-adslicecontroller.so` to `/etc/lib/obs-plugins/`
 
-* `name`: The plugin name
-* `version`: The plugin version
-* `author`: Actual name or nickname of the plugin's author
-* `website`: URL of a website associated with the plugin
-* `email`: Contact email address associated with the plugin
-* `uuids`
-    * `macosPackage`: Unique (**!**) identifier for the macOS plugin package
-    * `macosInstaller`: Unique (**!**) identifier for the macOS plugin installer
-    * `windowsApp`: Unique (**!**) identifier for the Windows plugin installer
+after Installation just run OBS
 
-These values are read and processed automatically by the CMake build scripts, so no further adjustments in other files are needed.
 
-### Platform Configuration
+## How to Use
+### The Plugin
 
-Platform-specific settings are set up in the `platformConfig` section of the buildspec file:
+First if you can't see the plugin controls go to  `Docks` and make sure **Ad Control** has a checkmark, if not click it.
+After that you will see the Ad Control Window, feel free to dock this window wherever in your OBS.
 
-* `bundleId`: macOS bundle identifier for the plugin. Should be unique and follow reverse domain name notation.
+Next up you need to configure your Ad Provider by clicking the settings button.
+Your current settings are at a Default value, this needs to be changed to the Data your Ad Provider gave you.
+    *Note: if you are a developer using this plugin put in your host and token to what you configured*
+ 
+ ###### A small explenation on the settings:
+    API-Host: 
+     the Root-URL of your API.
+     if you have http://localhost:5444/loadAd as a valid route
+     then http://localhost:5444/ is your Root route
+
+    API-Token:
+     the Token used to Authenticate yourself with the API 
+     DO NOT SHARE
+
+The Plugin should now work, if not check Troubleshooting.
+Pressing the Refresh Button checks the current available ads via the API
+Pressing Play Ad downloads and starts the ad.
+
+#### Troubleshooting the Plugin
+`Connection refused ()`
+ * double check if the API is online
+ * Check if the API-Host URL is correct
+ * Check if you have a working Internet connection
+
+`Error transferring <url> - server replied Forbidden ()`
+ * double check if your API-Token is correct
+ * if you are self-hosting the API check if the Token is Authorized
+
+ ### The API
+
+The API uses NodeJS with express, to download all necessary packages please install NodeJS as well as npm and run the 
+`npm install` inside the api directory then just start the API with `node ./main.js` 
+
+*Note: This is a test API designed to give backend devs a clue of how the api works and should not be used in Deployment*
+
+`/getAds`
+returns a JSON with every Ad, an ad is structured to be 
+```
+{
+  "id": <identifier>,
+  "name": "Displayname",
+  "duration": "0:30"
+}
+```
+
+`/prepareAd`
+Returns a OTP to use as a parameter in `/loadAd`
+
+`/loadAd`
+Used inside the adSource in OBS, send to this route with the OTP from `/prepareAd` to get the download for the Ad
+
+
+
+
+
+
+## Build at Home
 
 ### Set Up Build Dependencies
 
-Just like OBS Studio itself, plugins need to be built using dependencies available either via the `obs-deps` repository (Windows and macOS) or via a distribution's package system (Linux).
-
-#### Choose An OBS Studio Version
-
-By default the plugin template specifies the most current official OBS Studio version in the `buildspec.json` file, which makes most sense for plugins at the start of development. As far as updating the targeted OBS Studio version is concerned, a few things need to be considered:
-
-* Plugins targeting _older_ versions of OBS Studio should _generally_ also work in newer versions, with the exception of breaking changes to specific APIs which would also be explicitly called out in release notes
-* Plugins targeting the _latest_ version of OBS Studio might not work in older versions because the internal data structures used by `libobs` might not be compatible
-* Users are encouraged to always update to the most recent version of OBS Studio available within a reasonable time after release - plugin authors have to choose for themselves if they'd rather keep up with OBS Studio releases or stay with an older version as their baseline (which might of course preclude the plugin from using functionality introduced in a newer version)
-
-On Linux, the version used for development might be decided by the specific version available via a distribution's package management system, so OBS Studio compatibility for plugins might be determined by those versions instead.
+Just like OBS Studio itself, this Plugin need to be built using dependencies available either via the `obs-deps` repository (Windows and macOS) or via a distribution's package system (Linux).
 
 #### Windows and macOS
 
@@ -52,6 +89,7 @@ Windows and macOS dependency downloads are configured in the `buildspec.json` fi
     * `obs-studio`: Version of OBS Studio to build plugin with (needed for `libobs` and `obs-frontend-api`)
     * `prebuilt`: Prebuilt OBS Studio dependencies
     * `qt6`: Prebuilt version of Qt6 as used by OBS Studio
+    * `nlohmann-json`: Prebuilt version of Qt6 as used by OBS Studio
 * `tools`: Contains additional build tools used by CI
 
 The values should be kept in sync with OBS Studio releases and the `buildspec.json` file in use by the main project to ensure that the plugin is developed and built in sync with its target environment.
@@ -73,6 +111,8 @@ Linux dependencies need to be resolved using the package management tools approp
     * `qt6-base-dev`
     * `libqt6svg6-dev`
     * `qt6-base-private-dev`
+* Additional Dependencies:
+    * `nlohmann-json3-dev`
 
 ## Build System Configuration
 
@@ -88,7 +128,7 @@ To create a build configuration, `cmake` needs to be installed on the system. Th
 * `windows-x64`
     * Windows 64-bit architecture
     * Defaults to Qt version `6`
-    * Defaults to Visual Studio 17 2022
+    * Defaults to Visual Studio 17 2022, can use others as well
     * Defaults to Windows SDK version `10.0.18363.657`
 * `windows-ci-x64`
     * Inherits from `windows-x64`
