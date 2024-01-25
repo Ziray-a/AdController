@@ -12,15 +12,18 @@ var ActiveLinks =[
 ]
 var Ads = [
   {"id": 1234,
-  "name": "Sponsor1"
+  "name": "Sponsor1",
+  "duration": "0:30"
 },
 {
   "id": 1235,
-  "name": "Sponsor2"
+  "name": "Sponsor2",
+  "duration": "0:46"
 },
 {
   "id": 1236,
-  "name": "Sponsor2"
+  "name": "Sponsor2",
+  "duration": "0:46"
 }
 ]
 var filelocations = [

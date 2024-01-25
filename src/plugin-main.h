@@ -13,7 +13,7 @@
 #include <QDialog>
 #include <QLabel>
 
-typedef std::tuple<int, std::string> AdInfo;
+typedef std::tuple<int, std::string, std::string> AdInfo;
 
 class SettingsWindow : public QDialog {
 	Q_OBJECT
