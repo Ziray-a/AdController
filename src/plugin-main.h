@@ -39,6 +39,17 @@ public:
 	void ButtonClicked();
 };
 
+class ErrorDialogue : public QDialog {
+	Q_OBJECT
+public:
+	ErrorDialogue(std::string error);
+	QLabel *errorLabel = new QLabel();
+	QPushButton *ok = new QPushButton(tr("&OK"));
+	QGridLayout *layout = new QGridLayout(this);
+	QGridLayout *childLayout = new QGridLayout();
+	void okayclose();
+};
+
 class AdControlWidget : public QWidget {
 	Q_OBJECT
 

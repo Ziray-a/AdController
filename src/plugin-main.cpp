@@ -97,6 +97,22 @@ void SettingsButton::ButtonClicked()
 	settings->show();
 }
 
+ErrorDialogue::ErrorDialogue(std::string Error)
+{
+	this->setWindowTitle("Error");
+	errorLabel->setText(Error.c_str());
+	layout->addWidget(errorLabel, 0, 0);
+	childLayout->addWidget(ok, 0, 0);
+	layout->addLayout(childLayout, 1, 0);
+	connect(ok, &QPushButton::released, this, &ErrorDialogue::okayclose);
+	this->setLayout(layout);
+};
+
+void ErrorDialogue::okayclose()
+{
+	this->close();
+}
+
 SettingsWindow::SettingsWindow(config_t *config)
 {
 	this->setMaximumHeight(150);
@@ -265,8 +281,10 @@ void AdControlWidget::getAdLink(std::string APIHost, int adID)
 				videoLink = returnstring;
 
 			} else {
-				std::cout << reply->readAll().toStdString()
-					  << std::endl;
+				ErrorDialogue *errdiag = new ErrorDialogue(
+					reply->readAll().toStdString() + "\n" +
+					reply->errorString().toStdString());
+				errdiag->show();
 			}
 			loadVideo();
 		});
@@ -303,6 +321,10 @@ void AdControlWidget::getAds(std::string APIHost)
 
 			} else {
 				availableAds.clear();
+				ErrorDialogue *errdiag = new ErrorDialogue(
+					reply->readAll().toStdString() + "\n" +
+					reply->errorString().toStdString());
+				errdiag->show();
 				availableAds.emplace_back(AdInfo(
 					0, reply->errorString().toStdString(),
 					""));
