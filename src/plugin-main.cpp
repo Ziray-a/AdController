@@ -71,7 +71,7 @@ bool obs_module_load(void)
 		config_get_string(pluginConfig, "API", "API-Host"),
 		config_get_string(pluginConfig, "API", "Token"));
 	dockWidget->setMinimumHeight(200);
-	dockWidget->setMinimumWidth(150);
+	dockWidget->setMinimumWidth(200);
 
 	if (!obs_frontend_add_dock_by_id(pluginID, "Ad Control", dockWidget))
 		obs_log(LOG_ERROR, "Could not load dock");
@@ -295,7 +295,8 @@ void AdControlWidget::getAds(std::string APIHost)
 					availableAds.emplace_back(AdInfo(
 
 						array["id"].get<int>(),
-						array["name"]
+						array["name"].get<std::string>(),
+						array["duration"]
 							.get<std::string>()));
 				}
 				adPlayButton->setEnabled(true);
@@ -303,7 +304,8 @@ void AdControlWidget::getAds(std::string APIHost)
 			} else {
 				availableAds.clear();
 				availableAds.emplace_back(AdInfo(
-					0, reply->errorString().toStdString()));
+					0, reply->errorString().toStdString(),
+					""));
 				obs_log(LOG_ERROR, reply->errorString()
 							   .toStdString()
 							   .c_str());
@@ -340,7 +342,10 @@ void AdControlWidget::updateAds()
 {
 	adSelection->clear();
 	for (AdInfo ad : availableAds) {
-		adSelection->addItem(std::get<1>(ad).c_str(),
-				     QVariant(std::get<0>(ad)));
+		adSelection->addItem(
+			std::get<1>(ad)
+				.append(" (" + std::get<2>(ad) + ")")
+				.c_str(),
+			QVariant(std::get<0>(ad)));
 	}
 }
