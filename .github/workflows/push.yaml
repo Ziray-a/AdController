@@ -55,7 +55,7 @@ jobs:
               echo 'prerelease=true' >> $GITHUB_OUTPUT
               echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
               ;;
-            *) echo 'validTag=false' >> $GITHUB_OUTPUT ;;
+            *) echo 'validTag=true' >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Download Build Artifacts 📥
