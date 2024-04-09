@@ -35,7 +35,7 @@ Your current settings are at a Default value, this needs to be changed to the Da
 
 The Plugin should now work, if not check Troubleshooting.
 Pressing the Refresh Button checks the current available ads via the API
-Pressing Play Ad downloads and starts the ad.
+Pressing ```Play Ad``` downloads and starts the ad.
 
 #### Troubleshooting the Plugin
 `Connection refused ()`
