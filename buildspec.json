@@ -33,10 +33,10 @@
     },
     "platformConfig": {
         "macos": {
-            "bundleId": "de.sodgeit.obs-adslicecontroller"
+            "bundleId": "de.sodgeit.obs-adcontroller"
         }
     },
-    "name": "obs-adslicecontroller",
+    "name": "obs-adcontroller",
     "version": "1.0.0",
     "author": "sodgeIT",
     "website": "https://www.sodgeit.de/",

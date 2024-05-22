@@ -1,14 +1,14 @@
-# OBS Plugin Template
+# OBS Ad Controller
 
 ## Introduction
 
-This is the AdSliceController, a plugin to load Ads from an API and play said Ad media in a temprorary scene for a seamless Sponsor experience
+This is the AdController, a plugin to load Ads from an API and play said Ad media in a temprorary scene for a seamless Sponsor experience
 
 ## How Install
 
-If you are on **Windows** move `obs-adslicecontroller.pbd` and `obs-adslicecontroller.dll` to `<obs-studio location>\obs-plugins\64bit\`
+If you are on **Windows** move `obs-adcontroller.pbd` and `obs-adcontroller.dll` to `<obs-studio location>\obs-plugins\64bit\`
 
-If you are on **Linux** move `obs-adslicecontroller.so` to `/etc/lib/obs-plugins/`
+If you are on **Linux** move `obs-adcontroller.so` to `/etc/lib/obs-plugins/`
 
 after Installation just run OBS
 
@@ -89,7 +89,7 @@ Windows and macOS dependency downloads are configured in the `buildspec.json` fi
     * `obs-studio`: Version of OBS Studio to build plugin with (needed for `libobs` and `obs-frontend-api`)
     * `prebuilt`: Prebuilt OBS Studio dependencies
     * `qt6`: Prebuilt version of Qt6 as used by OBS Studio
-    * `nlohmann-json`: Prebuilt version of Qt6 as used by OBS Studio
+    * `nlohmann-json`: Library for json handeling
 * `tools`: Contains additional build tools used by CI
 
 The values should be kept in sync with OBS Studio releases and the `buildspec.json` file in use by the main project to ensure that the plugin is developed and built in sync with its target environment.

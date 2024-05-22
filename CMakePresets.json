@@ -27,7 +27,8 @@
         "CODESIGN_IDENTITY": "$penv{CODESIGN_IDENT}",
         "CODESIGN_TEAM": "$penv{CODESIGN_TEAM}",
         "ENABLE_FRONTEND_API": true,
-        "ENABLE_QT": true
+        "ENABLE_QT": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     },
     {
@@ -62,7 +63,8 @@
         "QT_VERSION": "6",
         "CMAKE_SYSTEM_VERSION": "10.0.18363.657",
         "ENABLE_FRONTEND_API": true,
-        "ENABLE_QT": true
+        "ENABLE_QT": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     },
     {
@@ -95,7 +97,8 @@
         "QT_VERSION": "6",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_FRONTEND_API": true,
-        "ENABLE_QT": true
+        "ENABLE_QT": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     },
     {
@@ -129,7 +132,8 @@
         "QT_VERSION": "6",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_FRONTEND_API": true,
-        "ENABLE_QT": true
+        "ENABLE_QT": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     },
     {
@@ -141,7 +145,10 @@
       "description": "Build for Linux aarch64 on CI",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_COMPILE_WARNING_AS_ERROR": true
+        "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+        "ENABLE_FRONTEND_API": true,
+        "ENABLE_QT": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     }
   ],

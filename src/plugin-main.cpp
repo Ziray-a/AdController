@@ -46,27 +46,27 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 std::vector<obs_source *> mutedItems;
 bool obs_module_load(void)
 {
-	int conftest = config_open(&pluginConfig, "obs-ad-slice-controler.ini",
+	int conftest = config_open(&pluginConfig, "obs-adcontroller.ini",
 				   CONFIG_OPEN_EXISTING);
 	if (conftest == CONFIG_FILENOTFOUND) {
 
-		pluginConfig = config_create("obs-ad-slice-controler.ini");
+		pluginConfig = config_create("obs-adcontroller.ini");
 
 		config_set_default_string(pluginConfig, "API", "API-Host",
 					  "http://localhost:5499");
 		config_set_default_string(pluginConfig, "API", "Token",
 					  "Token Here");
 		config_save_safe(pluginConfig, ".ex.tmp", ".ex.back");
-		obs_log(LOG_INFO, "Created new Adslice Config");
+		obs_log(LOG_INFO, "Created new Ad Config");
 
 	} else if (conftest == CONFIG_ERROR) {
 		obs_log(LOG_INFO, "Error in config file - reseting...");
-		pluginConfig = config_create("obs-ad-slice-controler.ini");
+		pluginConfig = config_create("obs-adcontroller.ini");
 	}
 
 	obs_log(LOG_INFO, "config found reading config");
 
-	char pluginID[] = "obs-ad_slice_controller_100";
+	char pluginID[] = "obs-ad_controller_100";
 	dockWidget = new AdControlWidget(
 		config_get_string(pluginConfig, "API", "API-Host"),
 		config_get_string(pluginConfig, "API", "Token"));
